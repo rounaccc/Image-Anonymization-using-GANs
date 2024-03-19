@@ -1,0 +1,11 @@
+DataTransformation:
+  img_size : 128
+  batch_size : 32
+  path : '../face-mask-lite-dataset/without_mask'
+
+ModelTraining:
+  latent_dim : 100
+  epochs : 20
+  lr : .0001
+  clipvalue : 1.0
+  decay : 1e-8
