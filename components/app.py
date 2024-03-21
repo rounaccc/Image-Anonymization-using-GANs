@@ -6,8 +6,8 @@ from mtcnn.mtcnn import MTCNN
 import time
 from tensorflow.keras.models import load_model
 import matplotlib.pyplot as plt
-from FakeFaceDetection_prediction import predict
 from objectdetection import compare_models
+from FakeFaceDetection_prediction import make_prediction
 
 def process_file(uploaded_file):
     image = Image.open(uploaded_file)
@@ -32,23 +32,35 @@ def check_human(yolo,img,mtcnn):
     if mtcnn_acc>0.0 and yolo_acc>0.0:
         st.write(f"Using {model_name} for face detection")
         return True
-def plot_generated_images(mtcnn, realfake, yolo,generator,img, square = 5, epochs = 0, latent_dim = 100):
+
+def create_imgs(generator,square,latent_dim = 100):
+    for i in range(square*square):
+        noise = np.random.normal(0,1,(1,latent_dim))
+        img = generator(noise)
+        plt.imsave(f"image_gen/gen_{i}.png", np.clip((img[0,...]+1)/2, 0, 1))
+
+def check_realvfake(realvfake,img):
+    prediction_label,score = make_prediction(realvfake, image_path=img)
+    return prediction_label,score
+
+def plot_generated_images(realvfake,mtcnn, yolo,generator,img, square = 5, epochs = 0, latent_dim = 100):
     if check_human(yolo=yolo,mtcnn=mtcnn,img=img):
+        create_imgs(generator,square,latent_dim)
         fig = plt.figure(figsize = (10,10))
         for i in range(square * square):
             if epochs != 0:    
                 if(i == square //2):
                     plt.title("Generated Image at Epoch:{}\n".format(epochs), fontsize = 32, color = 'black')
             plt.subplot(square, square, i+1)
-            noise = np.random.normal(0,1,(1,latent_dim))
-            img = generator(noise)
-            img_np = np.array(img[0,...]+1)
-            label = predict(img_np,model=realfake)
-            plt.title(label=label, fontsize = 16, color = 'black')
-            plt.imshow(np.clip((img[0,...]+1)/2, 0, 1))
-        return st.pyplot(fig)
+            img_path = f"image_gen/gen_{i}.png"
+            realvfake_pred,score = check_realvfake(realvfake, img_path)
+            plt.imshow(plt.imread(img_path))
+            plt.title(f"{realvfake_pred}, {round(score[0][0]*100,2)}%", fontsize = 10, color = 'black')
+        st.pyplot(fig)
+        return True
     else:
-        return st.write("No person detected in the image")
+        st.write("No person detected in the image")
+        return False
     
 def main():
     discrimator, generator, yolo, realvfake,mtcnn = loadmodels()
@@ -60,14 +72,14 @@ def main():
         image = st.camera_input("Capture image")
         if image is not None:
             image = process_file(image)
-            plot_generated_images(mtcnn=mtcnn,realfake=realvfake,yolo=yolo,generator=generator,img = image, square=2)
+            flag = plot_generated_images(realvfake=realvfake,mtcnn=mtcnn,yolo=yolo,generator=generator,img = image, square=2)
 
     elif option == 'Try a Demo':
         image = np.array(Image.open("artifacts/demo.webp"))
         st.image(image)
 
         st.write("#### Generated images")
-        plot_generated_images(mtcnn=mtcnn,realfake=realvfake,yolo=yolo,generator=generator,img = image, square=2)
+        flag = plot_generated_images(realvfake=realvfake,mtcnn=mtcnn,yolo=yolo,generator=generator,img = image, square=2)
     
 if __name__ == "__main__":
     main()

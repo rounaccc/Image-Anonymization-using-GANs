@@ -1,36 +1,46 @@
+import os
 import cv2
 import numpy as np
 from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing.image import img_to_array, load_img
 
-def preprocess_image(image):
-  # image = np.array(image)
-  img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) 
-  img = cv2.resize(img, (224, 224))
-  img = img.astype("float32") / 255.0
-  img = np.expand_dims(img, axis=0)
-  print(img.shape,"preprocessed")
-  return img
 
-def get_user_input():
-  image_path = input("Enter the path to the image: ")
-  return image_path
+#function for preprocessing the input image
+def preprocess_image(image_path):
+    img = load_img(image_path, target_size=(224, 224), color_mode='grayscale')
+    img_array = img_to_array(img)
+    img_array /= 255.0
+    img_array = np.expand_dims(img_array, axis=0)
+    return img_array
 
-def load_my_model():
-  
-  model = load_model("C:/Users/Hetvi/Desktop/OneDrive/Projects/mloa nndl/Real VS Fake.h5")
-  return model
+#function for making predictions
+def make_prediction(model, image_path):
+    preprocessed_img = preprocess_image(image_path)
+    prediction = model.predict(preprocessed_img)
+    print(prediction)
+    if prediction > 0.7:
+        return "Real", prediction
+    else:
+        return "Fake", prediction
 
-def predict(image, model):
+def main():
+    # Load the pre-trained model
+    model = load_model('artifacts/realvfake.h5')  # Change the filename if necessary
+    # Take user input for the image path
+    #image_path = input("Enter the path to the image: ")
+    image_path = 'artifacts/demo.webp'
 
-  preprocessed_image = preprocess_image(image)
-  print(preprocessed_image[0].shape)
-  prediction = model.predict(preprocessed_image[0])[0][0]
-  class_label = "real" if prediction > 0.5 else "fake"
-  return class_label
+    # Check if the image path is valid
+    if not os.path.exists(image_path):
+        print("Invalid image path. Please provide a valid path.")
+        return
+
+    # Make prediction
+
+    prediction = make_prediction(model, image_path=image_path)
+
+    # Provide output
+    print("Prediction:", prediction)
 
 if __name__ == "__main__":
-
-  image_path = get_user_input()
-  model = load_my_model()
-  prediction = predict(image_path, model)
-  print(f"Predicted class: {prediction}")
+    main()
