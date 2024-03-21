@@ -5,7 +5,8 @@ import matplotlib.pyplot as plt
 # Load generator model
 generator = load_model('./artifacts/generator.h5')
 
-def plot_generated_images(square = 5, epochs = 0, latent_dim = 100):
+def plot_generated_images(square = 5, epochs = 0, latent_dim = 100, model=generator):
+  print(square, epochs, latent_dim, model)
   plt.figure(figsize = (10,10))
   for i in range(square * square):
     if epochs != 0:    

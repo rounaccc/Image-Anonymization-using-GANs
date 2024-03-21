@@ -2,9 +2,9 @@ import cv2
 import numpy as np
 from tensorflow.keras.models import load_model
 
-def preprocess_image(image_path):
-  img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-  img = cv2.resize(img, (224, 224))
+def preprocess_image(image):
+  # image = np.array(image)
+  img = cv2.resize(image, (224, 224))
   img = img.astype("float32") / 255.0
   img = np.expand_dims(img, axis=0)
   return img
@@ -18,9 +18,10 @@ def load_my_model():
   model = load_model("C:/Users/Hetvi/Desktop/OneDrive/Projects/mloa nndl/Real VS Fake.h5")
   return model
 
-def predict(image_path, model):
+def predict(image, model):
 
-  preprocessed_image = preprocess_image(image_path)
+  preprocessed_image = preprocess_image(image)
+  print(preprocessed_image.shape)
   prediction = model.predict(preprocessed_image)[0][0]
   class_label = "real" if prediction > 0.5 else "fake"
   return class_label
