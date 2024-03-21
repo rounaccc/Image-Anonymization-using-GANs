@@ -134,5 +134,10 @@ def pipeline(SIZE, path, batch_size, latent_dim):
     dataset = preprocess(SIZE, path, batch_size)
     train(15,dataset)
 
+
+if __name__=='__main__':
+    generator, discriminator = tf.keras.load_model('artifacts/generator.h5'), tf.keras.load_model('artifacts/discriminator.h5')
+    tf.keras.utils.plot_model(generator, to_file='generator.png', show_shapes=True)
+    tf.keras.utils.plot_model(discriminator, to_file='discriminator.png', show_shapes=True)
 # generator.save('generator1.h5')
 # discriminator.save("discriminator1.h5")
